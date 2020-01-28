@@ -14,6 +14,14 @@ from opentuner import EnumParameter
 from opentuner import IntegerParameter
 from opentuner import MeasurementInterface
 from opentuner import Result
+import argparse
+import logging
+
+log = logging.getLogger('tuneNormalizer')
+
+argparser = argparse.ArgumentParser(parents=opentuner.argparsers())
+argparser.add_argument('--func', default='', help='Function name')
+
 
 OPT_FLAGS = [
 'mem2reg', 'licm', 'gvn', 'early-cse', 'globalopt', 'simplifycfg',
@@ -51,7 +59,7 @@ class NormalizerTuner(MeasurementInterface):
       if cfg[flag] == 'on':
         opt_seq += ' -{0}'.format(flag)
 
-    print('\nTrying {0}'.format(opt_seq))
+#log.info('\nTrying {0}'.format(opt_seq))
 
     compd_opt_cmd = 'opt -S {0} mcsema/test.proposed.inline.ll -o mcsema/test.proposed.opt.ll'.format(opt_seq)
     compd_opt_result = self.call_program(compd_opt_cmd)
@@ -61,26 +69,33 @@ class NormalizerTuner(MeasurementInterface):
     mcsema_opt_result = self.call_program(mcsema_opt_cmd)
     assert mcsema_opt_result['returncode'] == 0
 
-    matcher_run_cmd = '/home/sdasgup3/Github//validating-binary-decompilation/source/build/bin//matcher --file1 ../binary/test.mcsema.opt.ll:get_sign --file2 mcsema/test.proposed.opt.ll:get_sign --potential-match-accuracy'
+    matcher_run_cmd = '/home/sdasgup3/Github//validating-binary-decompilation/source/build/bin//matcher --file1 ../binary/test.mcsema.opt.ll:{0} --file2 mcsema/test.proposed.opt.ll:{0} --potential-match-accuracy'.format(args.func)
 
     matcher_run_result = self.call_program(matcher_run_cmd)
     assert matcher_run_result['returncode'] == 0
     
     matcher_stderr = matcher_run_result['stderr']
-    print(matcher_stderr)
+    #print(matcher_stderr)
     z = re.findall(r"^Accuracy:(\d+\.[\deE+-]+)", matcher_stderr, re.MULTILINE)
     cost = 1 - float(z[0])
 
-    print('Cost: {0}'.format(cost))
+    log.info('Cost:{0} [{1}]'.format(cost, opt_seq))
     return Result(time=cost)
 
   def save_final_config(self, configuration):
     """called at the end of tuning"""
-    print("Optimal block size written to normalizer_final_config.json:", configuration.data)
+    optimal_cfg = ''
+    for cfg in configuration.data.keys():
+      if configuration.data[cfg] == "on":
+        optimal_cfg +=  cfg
+        optimal_cfg += ' '
+    log.info("Optimal block size written to normalizer_final_config.json: [{0}]".format(optimal_cfg))
     self.manipulator().save_to_file(configuration.data,
                                     'normalizer_final_config.json')
 
 
 if __name__ == '__main__':
-  argparser = opentuner.default_argparser()
-  NormalizerTuner.main(argparser.parse_args())
+  opentuner.init_logging()
+  #argparser = opentuner.default_argparser()
+  args = argparser.parse_args()
+  NormalizerTuner.main(args)
