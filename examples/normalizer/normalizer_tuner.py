@@ -41,19 +41,28 @@ argparser.add_argument(
     help='Output dir to dump the optimal pass sequence')
 argparser.add_argument('--matcher', default='', help='Matcher tool path')
 
-#CANDIDATE_OPT_SEQ_FILE = home + \
+#OPT_SEQ_FILE = home + \
 #    '/Github//validating-binary-decompilation/tests/scripts/opt_candidates.txt'
-#OPT_FLAGS = open(CANDIDATE_OPT_SEQ_FILE).read().splitlines()
+#OPT_FLAGS = open(OPT_SEQ_FILE).read().splitlines()
 
 OPT_FLAGS = [
     '-mem2reg', '-licm', '-gvn', '-early-cse', '-globalopt', '-simplifycfg', '-basicaa' ,
     '-aa', '-memdep', '-dse', '-deadargelim', '-libcalls-shrinkwrap', '-tailcallelim',
     '-instcombine', '-memcpyopt',
+    '-mem2reg', '-licm', '-gvn', '-early-cse', '-globalopt', '-simplifycfg', '-basicaa' ,
+    '-aa', '-memdep', '-dse', '-deadargelim', '-libcalls-shrinkwrap', '-tailcallelim',
+    '-instcombine', '-memcpyopt',
 ]
 
-# OPT_FLAGS = [
-#'-aa', '-adce', '-alignment-from-assumptions', '-argpromotion', '-assumption-cache-tracker', '-barrier', '-basicaa', '-basiccg', '-bdce', '-block-freq', '-branch-prob', '-constmerge', '-correlated-propagation', '-deadargelim', '-demanded-bits', '-domtree', '-dse', '-early-cse', '-elim-avail-extern', '-float2int', '-forceattrs', '-functionattrs', '-globaldce', '-globalopt', '-globals-aa', '-gvn', '-indvars', '-inferattrs', '-inline', '-instcombine', '-instsimplify', '-ipsccp', '-jump-threading', '-lazy-block-freq', '-lazy-branch-prob', '-lazy-value-info', '-lcssa', '-lcssa-verification', '-libcalls-shrinkwrap', '-licm', '-loop-accesses', '-loop-deletion', '-loop-distribute', '-loop-idiom', '-loop-load-elim', '-loop-rotate', '-loops', '-loop-simplify', '-loop-sink', '-loop-unroll', '-loop-unswitch', '-loop-vectorize', '-mem2reg', '-memcpyopt', '-memdep', '-mldst-motion', '-opt-remark-emitter', '-postdomtree', '-prune-eh', '-reassociate', '-rpo-functionattrs', '-scalar-evolution', '-sccp', '-scoped-noalias', '-simplifycfg', '-slp-vectorizer', '-sroa', '-strip-dead-prototypes', '-tailcallelim', '-tbaa', '-verify',
-#]
+## All O3 passes (DO NOT sort as it will destroy the interleaving)
+#OPT_SEQ_FILE = home + \
+#    '/Github//validating-binary-decompilation/tests/scripts/O3_flags.txt'
+#OPT_FLAGS = open(OPT_SEQ_FILE).read().splitlines()
+
+## Selected O3 passes (DO NOT sort as it will destroy the interleaving)
+#OPT_SEQ_FILE = home + \
+#    '/Github//validating-binary-decompilation/tests/scripts/selected_O3_flags.txt'
+#OPT_FLAGS = open(OPT_SEQ_FILE).read().splitlines()
 
 
 class NormalizerTuner(MeasurementInterface):
@@ -173,72 +182,78 @@ class NormalizerTuner(MeasurementInterface):
         outfile = args.outdir + '/' + 'normalizer_final_config.json'
         if cost == 0:
             log.info(
-                "Early Exit: Optimal pass sequence written to {0}: [{1}]".format(
+                "run_precompiled: Early Exit: Optimal pass sequence written to {0}: [{1}]".format(
                     outfile, opt_seq))
 
-            shutil.rmtree("./tmp")
-            shutil.rmtree("./opentuner.db")
-            os.remove("opentuner.log")
-
-            with open(outfile, 'w') as fd:
-                fd.write('{0}'.format(opt_seq))
-                exit(0)
+#shutil.rmtree("./tmp")
+#            os.remove("opentuner.log")
+#
+            with open(outfile, 'a') as fd:
+                fd.write('{0}\n'.format(opt_seq))
 
         return Result(time=cost)
 
-#    def run(self, desired_result, input, limit):
-#        """
-#        Compile and run a given configuration then
-#        return performance
-#        """
-#        cfg = desired_result.configuration.data
-#
-#        opt_seq = ''
-#
-#        for flag in OPT_FLAGS:
-#            if cfg[flag] == 'on':
-#                opt_seq += ' -{0}'.format(flag)
-#
-#        compd_opt_cmd = 'opt -S {0} mcsema/test.proposed.inline.ll -o mcsema/test.proposed.opt.ll'.format(
-#            opt_seq)
-#        compd_opt_result = self.call_program(compd_opt_cmd)
-#        assert compd_opt_result['returncode'] == 0
-#
-#        mcsema_opt_cmd = 'opt -S {0} ../binary/test.mcsema.inline.ll -o ../binary/test.mcsema.opt.ll'.format(
-#            opt_seq)
-#        mcsema_opt_result = self.call_program(mcsema_opt_cmd)
-#        assert mcsema_opt_result['returncode'] == 0
-#
-#        matcher = args.matcher
-#        if(matcher == ''):
-#            matcher = home + '/Github//validating-binary-decompilation/source/build/bin//matcher'
-#
-#        matcher_run_cmd = '{0} --file1 {1}/test.mcsema.opt.ll:{2} --file2 {1}/test.proposed.opt.ll:{2} --potential-match-accuracy'.format(
-#            matcher, tmp_dir, args.func)
-#
-#        matcher_run_result = self.call_program(matcher_run_cmd)
-#        assert matcher_run_result['returncode'] == 0
-#
-#        matcher_stderr = matcher_run_result['stderr']
-#        z = re.findall(
-#            r"^Accuracy:(\d+\.[\deE+-]+)",
-#            matcher_stderr,
-#            re.MULTILINE)
-#        cost = 1 - float(z[0])
-#
-#        log.debug('[Run] Cost:{0} [{1}]'.format(cost, opt_seq))
-#
-#        # Early exit
-#        outfile = args.outdir + '/' + 'normalizer_final_config.json'
-#        if cost == 0:
-#            log.info(
-#                "Early Exit: Optimal pass sequence written to {0}: [{1}]".format(
-#                    outfile, opt_seq))
-#            with open(outfile, 'w') as fd:
-#                fd.write('{0}'.format(opt_seq))
-#            exit(0)
-#
-#        return Result(time=cost)
+    def run(self, desired_result, input, limit):
+        """
+        Compile and run a given configuration then
+        return performance
+        """
+        cfg = desired_result.configuration.data
+
+        opt_seq = ''
+
+        for flag in OPT_FLAGS:
+            if cfg[flag] == 'on':
+                opt_seq += ' {0}'.format(flag)
+
+        tmp_dir = "./tmp"    
+        compd_opt_cmd = 'opt -S {0} mcsema/test.proposed.inline.ll -o {1}/test.proposed.opt.ll'.format(
+            opt_seq, tmp_dir)
+        compd_opt_result = self.call_program(compd_opt_cmd)
+        if compd_opt_result['returncode'] != 0:
+          print(compd_opt_result)
+          assert 0
+
+        mcsema_opt_cmd = 'opt -S {0} ../binary/test.mcsema.inline.ll -o {1}/test.mcsema.opt.ll'.format(
+            opt_seq, tmp_dir)
+        mcsema_opt_result = self.call_program(mcsema_opt_cmd)
+        if mcsema_opt_result['returncode'] != 0:
+          print(mcsema_opt_result)
+          assert 0
+
+        matcher = args.matcher
+        if(matcher == ''):
+            matcher = home + '/Github//validating-binary-decompilation/source/build/bin//matcher'
+
+        matcher_run_cmd = '{0} --file1 {1}/test.mcsema.opt.ll:{2} --file2 {1}/test.proposed.opt.ll:{2} --potential-match-accuracy'.format(
+            matcher, tmp_dir, args.func)
+
+        matcher_run_result = self.call_program(matcher_run_cmd)
+        if matcher_run_result['returncode'] != 0:
+          print("ke papa")
+          print(matcher_run_result)
+          print("Rikiya")
+          assert 0
+
+        matcher_stderr = matcher_run_result['stderr']
+        z = re.findall(
+            r"^Accuracy:(\d+\.[\deE+-]+)",
+            matcher_stderr,
+            re.MULTILINE)
+        cost = 1 - float(z[0])
+
+        log.debug('[Run] Cost:{0} [{1}]'.format(cost, opt_seq))
+
+        # Early exit
+        outfile = args.outdir + '/' + 'normalizer_final_config.json'
+        if cost == 0:
+            log.info(
+                "run: Early Exit: Optimal pass sequence written to {0}: [{1}]".format(
+                    outfile, opt_seq))
+            with open(outfile, 'a') as fd:
+                fd.write('{0}\n'.format(opt_seq))
+
+        return Result(time=cost)
 
     def save_final_config(self, configuration):
         """called at the end of tuning"""
@@ -257,4 +272,5 @@ class NormalizerTuner(MeasurementInterface):
 if __name__ == '__main__':
     opentuner.init_logging()
     args = argparser.parse_args()
+    log.info(" Search Space: {0}\n\n".format(OPT_FLAGS))
     NormalizerTuner.main(args)
