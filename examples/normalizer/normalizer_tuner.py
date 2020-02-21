@@ -52,6 +52,9 @@ OPT_FLAGS = [
     '-mem2reg', '-licm', '-gvn', '-early-cse', '-globalopt', '-simplifycfg', '-basicaa' ,
     '-aa', '-memdep', '-dse', '-deadargelim', '-libcalls-shrinkwrap', '-tailcallelim',
     '-instcombine', '-memcpyopt',
+    '-mem2reg', '-licm', '-gvn', '-early-cse', '-globalopt', '-simplifycfg', '-basicaa' ,
+    '-aa', '-memdep', '-dse', '-deadargelim', '-libcalls-shrinkwrap', '-tailcallelim',
+    '-instcombine', '-memcpyopt',
 ]
 
 ## All O3 passes (DO NOT sort as it will destroy the interleaving)
@@ -230,9 +233,7 @@ class NormalizerTuner(MeasurementInterface):
 
         matcher_run_result = self.call_program(matcher_run_cmd)
         if matcher_run_result['returncode'] != 0:
-          print("ke papa")
           print(matcher_run_result)
-          print("Rikiya")
           assert 0
 
         matcher_stderr = matcher_run_result['stderr']
