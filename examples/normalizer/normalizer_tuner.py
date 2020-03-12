@@ -45,27 +45,21 @@ argparser.add_argument('--matcher', default='', help='Matcher tool path')
 #    '/Github//validating-binary-decompilation/tests/scripts/opt_candidates.txt'
 #OPT_FLAGS = open(OPT_SEQ_FILE).read().splitlines()
 
-OPT_FLAGS = [
-    '-mem2reg', '-licm', '-gvn', '-early-cse', '-globalopt', '-simplifycfg', '-basicaa' ,
-    '-aa', '-memdep', '-dse', '-deadargelim', '-libcalls-shrinkwrap', '-tailcallelim',
-    '-instcombine', '-memcpyopt',
-    '-mem2reg', '-licm', '-gvn', '-early-cse', '-globalopt', '-simplifycfg', '-basicaa' ,
-    '-aa', '-memdep', '-dse', '-deadargelim', '-libcalls-shrinkwrap', '-tailcallelim',
-    '-instcombine', '-memcpyopt',
-    '-mem2reg', '-licm', '-gvn', '-early-cse', '-globalopt', '-simplifycfg', '-basicaa' ,
-    '-aa', '-memdep', '-dse', '-deadargelim', '-libcalls-shrinkwrap', '-tailcallelim',
-    '-instcombine', '-memcpyopt',
-]
+#OPT_FLAGS = [
+#    '-mem2reg', '-licm', '-gvn', '-early-cse', '-globalopt', '-simplifycfg', '-basicaa' ,
+#    '-aa', '-memdep', '-dse', '-deadargelim', '-libcalls-shrinkwrap', '-tailcallelim',
+#    '-instcombine', '-memcpyopt', '-early-cse-memssa'
+#]
 
 ## All O3 passes (DO NOT sort as it will destroy the interleaving)
 #OPT_SEQ_FILE = home + \
 #    '/Github//validating-binary-decompilation/tests/scripts/O3_flags.txt'
 #OPT_FLAGS = open(OPT_SEQ_FILE).read().splitlines()
 
-## Selected O3 passes (DO NOT sort as it will destroy the interleaving)
-#OPT_SEQ_FILE = home + \
-#    '/Github//validating-binary-decompilation/tests/scripts/selected_O3_flags.txt'
-#OPT_FLAGS = open(OPT_SEQ_FILE).read().splitlines()
+# Selected O3 passes (DO NOT sort as it will destroy the interleaving)
+OPT_SEQ_FILE = home + \
+    '/Github//validating-binary-decompilation/tests/scripts/selected_O3_flags.txt'
+OPT_FLAGS = open(OPT_SEQ_FILE).read().splitlines()
 
 
 class NormalizerTuner(MeasurementInterface):
